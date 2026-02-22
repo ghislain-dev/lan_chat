@@ -12,12 +12,10 @@ class Database:
         self.init_database()
     
     def init_database(self):
-        """Initialise les tables de la base de données"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            # Table des utilisateurs
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS users (
                     username TEXT PRIMARY KEY,
@@ -27,7 +25,6 @@ class Database:
                 )
             ''')
             
-            # Table des messages
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS messages (
                     message_id TEXT PRIMARY KEY,
@@ -44,7 +41,6 @@ class Database:
                 )
             ''')
             
-            # Table des groupes
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS groups (
                     group_id TEXT PRIMARY KEY,
@@ -56,7 +52,6 @@ class Database:
                 )
             ''')
             
-            # Table des conversations
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS conversations (
                     conversation_id TEXT PRIMARY KEY,
@@ -69,7 +64,6 @@ class Database:
                 )
             ''')
             
-            # Table des messages hors ligne
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS offline_messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,9 +78,7 @@ class Database:
             conn.commit()
             conn.close()
     
-    # Gestion des utilisateurs
     def add_user(self, username: str) -> bool:
-        """Ajoute un nouvel utilisateur"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -103,7 +95,6 @@ class Database:
                 conn.close()
     
     def update_user_status(self, username: str, status: str):
-        """Met à jour le statut d'un utilisateur"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -115,7 +106,6 @@ class Database:
             conn.close()
     
     def get_all_users(self) -> List[Dict]:
-        """Récupère tous les utilisateurs"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -127,9 +117,7 @@ class Database:
             conn.close()
             return users
     
-    # Gestion des messages
     def save_message(self, message: Message):
-        """Sauvegarde un message"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -152,7 +140,6 @@ class Database:
             conn.close()
     
     def get_conversation_history(self, user1: str, user2: str, limit: int = 100) -> List[Message]:
-        """Récupère l'historique d'une conversation entre deux utilisateurs"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -166,11 +153,11 @@ class Database:
             messages = []
             for row in cursor.fetchall():
                 msg = Message(
-                    message_id=row[0],
                     sender=row[1],
                     recipient=row[2],
                     content=row[3],
                     message_type=row[4],
+                    message_id=row[0],
                     timestamp=datetime.fromisoformat(row[5]),
                     delivered=bool(row[6]),
                     read=bool(row[7]),
@@ -179,11 +166,9 @@ class Database:
                 messages.append(msg)
             
             conn.close()
-            return messages[::-1]  # Retourne dans l'ordre chronologique
+            return messages[::-1]
     
-    # Gestion des messages hors ligne
     def add_offline_message(self, username: str, message: Message):
-        """Ajoute un message hors ligne"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -195,7 +180,6 @@ class Database:
             conn.close()
     
     def get_offline_messages(self, username: str) -> List[Message]:
-        """Récupère les messages hors ligne pour un utilisateur"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -209,11 +193,11 @@ class Database:
             messages = []
             for row in cursor.fetchall():
                 msg = Message(
-                    message_id=row[0],
                     sender=row[1],
                     recipient=row[2],
                     content=row[3],
                     message_type=row[4],
+                    message_id=row[0],
                     timestamp=datetime.fromisoformat(row[5]),
                     delivered=bool(row[6]),
                     read=bool(row[7]),
@@ -221,7 +205,6 @@ class Database:
                 )
                 messages.append(msg)
             
-            # Supprimer les messages récupérés
             cursor.execute(
                 "DELETE FROM offline_messages WHERE username = ?",
                 (username,)
@@ -231,9 +214,7 @@ class Database:
             
             return messages
     
-    # Gestion des groupes
     def create_group(self, group: Group):
-        """Crée un nouveau groupe"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -251,7 +232,6 @@ class Database:
             conn.close()
     
     def get_user_groups(self, username: str) -> List[Group]:
-        """Récupère les groupes d'un utilisateur"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -262,9 +242,9 @@ class Database:
                 members = json.loads(row[4])
                 if username in members:
                     group = Group(
-                        group_id=row[0],
                         name=row[1],
                         created_by=row[2],
+                        group_id=row[0],
                         created_at=datetime.fromisoformat(row[3]),
                         members=members
                     )

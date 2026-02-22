@@ -7,10 +7,10 @@ import uuid
 class User:
     username: str
     connection_id: str
-    status: str = "offline"  # online, offline
+    status: str = "offline"
     last_seen: datetime = field(default_factory=datetime.now)
-    socket = None
     address: Optional[tuple] = None
+    # Le socket sera ajouté dynamiquement après la création
     
     def to_dict(self):
         return {
@@ -21,12 +21,10 @@ class User:
 
 @dataclass
 class Message:
-    # Les paramètres sans valeur par défaut doivent venir en premier
     sender: str
     recipient: str
     content: str
-    message_type: str  # "text", "file", "image"
-    # Ensuite les paramètres avec valeurs par défaut
+    message_type: str
     message_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=datetime.now)
     delivered: bool = False
@@ -48,10 +46,8 @@ class Message:
 
 @dataclass
 class Group:
-    # Les paramètres sans valeur par défaut
     name: str
     created_by: str
-    # Ensuite les paramètres avec valeurs par défaut
     group_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     members: List[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
@@ -67,9 +63,7 @@ class Group:
 
 @dataclass
 class Conversation:
-    # Les paramètres sans valeur par défaut
     participants: List[str]
-    # Ensuite les paramètres avec valeurs par défaut
     conversation_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     is_group: bool = False
     group_id: Optional[str] = None
@@ -82,8 +76,6 @@ class Conversation:
 
 @dataclass
 class OfflineMessage:
-    # Les paramètres sans valeur par défaut
     username: str
     message: Message
-    # Ensuite les paramètres avec valeurs par défaut
     stored_at: datetime = field(default_factory=datetime.now)

@@ -6,43 +6,28 @@ from dataclasses import dataclass, asdict
 from typing import Optional, Any, Dict, List
 
 class MessageType(Enum):
-    # Authentification
     LOGIN = "login"
     LOGIN_RESPONSE = "login_response"
     LOGOUT = "logout"
-    
-    # Utilisateurs
     USER_LIST = "user_list"
     USER_STATUS = "user_status"
-    
-    # Messages
     PRIVATE_MESSAGE = "private_message"
     GROUP_MESSAGE = "group_message"
     MESSAGE_RESPONSE = "message_response"
-    
-    # Groupes
     CREATE_GROUP = "create_group"
     GROUP_CREATED = "group_created"
     GROUP_LIST = "group_list"
     ADD_TO_GROUP = "add_to_group"
-    
-    # Fichiers
     FILE_TRANSFER_REQUEST = "file_transfer_request"
     FILE_TRANSFER_ACCEPT = "file_transfer_accept"
     FILE_TRANSFER_REJECT = "file_transfer_reject"
     FILE_CHUNK = "file_chunk"
     FILE_TRANSFER_COMPLETE = "file_transfer_complete"
-    
-    # Historique
     HISTORY_REQUEST = "history_request"
     HISTORY_RESPONSE = "history_response"
-    
-    # Notifications
     TYPING_NOTIFICATION = "typing_notification"
     MESSAGE_DELIVERED = "message_delivered"
     MESSAGE_READ = "message_read"
-    
-    # Erreurs
     ERROR = "error"
     PING = "ping"
     PONG = "pong"
@@ -76,28 +61,24 @@ class Message:
         return cls(**data_dict)
 
 class Protocol:
-    HEADER_SIZE = 4  # 4 bytes pour la taille du message
+    HEADER_SIZE = 4
     
     @staticmethod
     def pack_message(message: Message) -> bytes:
-        """Pack un message avec son en-tête de taille"""
         message_data = message.to_json()
         message_length = len(message_data)
-        header = struct.pack('!I', message_length)  # Network byte order
+        header = struct.pack('!I', message_length)
         return header + message_data
     
     @staticmethod
     def unpack_message(socket) -> Optional[Message]:
-        """Lit et décompresse un message depuis un socket"""
         try:
-            # Lire l'en-tête
             header = socket.recv(Protocol.HEADER_SIZE)
             if not header:
                 return None
             
             message_length = struct.unpack('!I', header)[0]
             
-            # Lire le message
             message_data = b''
             remaining = message_length
             while remaining > 0:
@@ -108,7 +89,8 @@ class Protocol:
                 remaining -= len(chunk)
             
             return Message.from_json(message_data)
-        except Exception:
+        except Exception as e:
+            print(f"Erreur unpack_message: {e}")
             return None
 
 @dataclass
